@@ -33,7 +33,6 @@
 from pyueye import ueye
 from threading import Thread
 import cv2
-import time
 
 
 error_codes = {ueye.IS_INVALID_EXPOSURE_TIME: "Invalid exposure time",
@@ -104,32 +103,24 @@ def check(error_code):
 
 
 class ImageBuffer:
-    """
-    Classe representing a buffer used to store an image.
-    """
     def __init__(self):
         self.mem_ptr = ueye.c_mem_p()
         self.mem_id = ueye.int()
 
 
 class MemoryInfo:
-    """
-    Represent
-    """
     def __init__(self, h_cam, img_buff):
         self.x = ueye.int()
         self.y = ueye.int()
         self.bits = ueye.int()
         self.pitch = ueye.int()
         self.img_buff = img_buff
-
         rect_aoi = ueye.IS_RECT()
         check(ueye.is_AOI(h_cam,
                           ueye.IS_AOI_IMAGE_GET_AOI,
                           rect_aoi, ueye.sizeof(rect_aoi)))
         self.width = rect_aoi.s32Width.value
         self.height = rect_aoi.s32Height.value
-
         check(ueye.is_InquireImageMem(h_cam,
                                       self.img_buff.mem_ptr,
                                       self.img_buff.mem_id,
@@ -174,13 +165,16 @@ class Rect:
         self.height = height
 
 
-class FrameThread(Thread):
-    def __init__(self, cam, views=None, copy=True):
-        super(FrameThread, self).__init__()
+class GatherThread(Thread):
+    def __init__(self, cam, copy=True):
+        """
+        Thread used for gather images.
+        """
+        super().__init__()
         self.timeout = 1000
         self.cam = cam
+        self.cam.capture_video()
         self.running = True
-        self.views = views
         self.copy = copy
 
     def run(self):
@@ -191,11 +185,26 @@ class FrameThread(Thread):
                                            img_buffer.mem_ptr,
                                            img_buffer.mem_id)
             if ret == ueye.IS_SUCCESS:
-                self.notify(ImageData(self.cam.handle(), img_buffer))
+                imdata = ImageData(self.cam.handle(), img_buffer)
+                self.process(imdata)
 
-            #break
+    def process(self, image_data):
+        pass
 
-    def notify(self, image_data):
+    def stop(self):
+        self.cam.stop_video()
+        self.running = False
+
+
+class FrameThread(GatherThread):
+    def __init__(self, cam, views=None, copy=True):
+        """
+        Thread used for live display.
+        """
+        super().__init__(cam=cam, copy=copy)
+        self.views = views
+
+    def process(self, image_data):
         if self.views:
             if type(self.views) is not list:
                 self.views = [self.views]
@@ -203,46 +212,31 @@ class FrameThread(Thread):
                 view.handle(image_data)
 
 
-class SaveThread(Thread):
+class SaveThread(GatherThread):
     def __init__(self, cam, path, copy=True):
-        super(SaveThread, self).__init__()
-        self.timeout = 1000
-        self.cam = cam
+        """
+        Thread used for saving images.
+        """
+        super().__init__(cam=cam, copy=copy)
         self.path = path
-        self.running = True
-        self.copy = copy
 
-    def run(self):
-        while self.running:
-            img_buffer = ImageBuffer()
-            ret = ueye.is_WaitForNextImage(self.cam.handle(),
-                                           self.timeout,
-                                           img_buffer.mem_ptr,
-                                           img_buffer.mem_id)
-            if ret == ueye.IS_SUCCESS:
-                self.save(ImageData(self.cam.handle(), img_buffer))
-                self.stop()
-
-    def save(self, image_data):
+    def process(self, image_data):
         cv2.imwrite(self.path, image_data.as_1d_image())
-
-    def stop(self):
-        self.cam.stop_video()
-        self.running = False
+        self.stop()
 
 
-class RecordThread(Thread):
+class RecordThread(GatherThread):
     def __init__(self, cam, path, nmb_frame=10, copy=True):
-        super(RecordThread, self).__init__()
-        self.timeout = 1000
+        """
+        Thread used to record videos.
+        """
+        super().__init__(cam=cam, copy=copy)
         self.nmb_frame = nmb_frame
         self.ind_frame = 0
-        self.cam = cam
         self.path = path
-        self.running = True
-        self.copy = copy
         aoi = self.cam.get_aoi()
-        print("TODO: add real fps")
+        # TODO: add real fps
+        # Create videowriter instance
         fourcc = cv2.VideoWriter_fourcc("M", "J", "P", "G")
         self.vw = cv2.VideoWriter(self.path,
                                   # cv2.CAP_FFMPEG,
@@ -251,27 +245,13 @@ class RecordThread(Thread):
                                   frameSize=(aoi.width, aoi.height),
                                   isColor=0)
 
-    def run(self):
-        while self.running:
-            img_buffer = ImageBuffer()
-            ret = ueye.is_WaitForNextImage(self.cam.handle(),
-                                           self.timeout,
-                                           img_buffer.mem_ptr,
-                                           img_buffer.mem_id)
-            if ret == ueye.IS_SUCCESS:
-                print("Save frame !")
-                self.save(ImageData(self.cam.handle(), img_buffer)
-                          .as_1d_image())
-            else:
-                print("Lost frame")
-                self.ind_frame += 1
-            if self.ind_frame >= self.nmb_frame:
-                self.stop()
-
-    def save(self, image):
-        self.vw.write(image)
+    def process(self, imdata):
+        self.vw.write(imdata)
+        self.ind_frame += 1
+        # stop
+        if self.ind_frame >= self.nmb_frame:
+            self.stop()
 
     def stop(self):
         self.vw.release()
-        self.cam.stop_video()
-        self.running = False
+        super().stop()

@@ -193,8 +193,8 @@ class Camera(object):
         count = ueye.UINT()
         check(ueye.is_ImageFormat(self.h_cam, ueye.IMGFRMT_CMD_GET_NUM_ENTRIES,
                                   count, ueye.sizeof(count)))
-        format_list = ueye.IMAGE_FORMAT_LIST(ueye.IMAGE_FORMAT_INFO
-                                             * count.value)
+        format_list = ueye.IMAGE_FORMAT_LIST(ueye.IMAGE_FORMAT_INFO *
+                                             count.value)
         format_list.nSizeOfListEntry = ueye.sizeof(ueye.IMAGE_FORMAT_INFO)
         format_list.nNumListElements = count.value
         check(ueye.is_ImageFormat(self.h_cam, ueye.IMGFRMT_CMD_GET_LIST,

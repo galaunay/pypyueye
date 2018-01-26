@@ -37,13 +37,13 @@ from pyueye import ueye
 
 
 def get_qt_format(ueye_color_format):
-    return {ueye.IS_CM_SENSOR_RAW8: QtGui.QImage.Format_Mono,
-            ueye.IS_CM_MONO8: QtGui.QImage.Format_Mono,
-            ueye.IS_CM_RGB8_PACKED: QtGui.QImage.Format_RGB888,
-            ueye.IS_CM_BGR8_PACKED: QtGui.QImage.Format_RGB888,
-            ueye.IS_CM_RGBA8_PACKED: QtGui.QImage.Format_RGB32,
-            ueye.IS_CM_BGRA8_PACKED: QtGui.QImage.Format_RGB32
-    }[ueye_color_format]
+    color_formats = {ueye.IS_CM_SENSOR_RAW8: QtGui.QImage.Format_Mono,
+                     ueye.IS_CM_MONO8: QtGui.QImage.Format_Mono,
+                     ueye.IS_CM_RGB8_PACKED: QtGui.QImage.Format_RGB888,
+                     ueye.IS_CM_BGR8_PACKED: QtGui.QImage.Format_RGB888,
+                     ueye.IS_CM_RGBA8_PACKED: QtGui.QImage.Format_RGB32,
+                     ueye.IS_CM_BGRA8_PACKED: QtGui.QImage.Format_RGB32}
+    return color_formats[ueye_color_format]
 
 
 class PyuEyeQtView(QtGui.QWidget):
@@ -75,7 +75,8 @@ class PyuEyeQtView(QtGui.QWidget):
 
     def draw_background(self, painter, rect):
         if self.image:
-            image = self.image.scaled(rect.width(), rect.height(), QtCore.Qt.KeepAspectRatio)
+            image = self.image.scaled(rect.width(), rect.height(),
+                                      QtCore.Qt.KeepAspectRatio)
             painter.drawImage(rect.x(), rect.y(), image)
 
     def update_image(self, image):
