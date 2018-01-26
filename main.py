@@ -40,46 +40,46 @@ import numpy as np
 
 
 class CircleDetector(object):
-    def __init__(self, nmb_circ, view):
+    def __init__(self, nmb_circ, min_dist=100):
         """
 
         """
         self.nmb_circ = nmb_circ
         self.dp = 1.5
+        self.min_dist = min_dist
         self.xy_center = []
-        self.view = view
-        self.view.user_callback = self.process
 
     def process(self, image_data):
         """
-        Actually process the image.
+        Detect circles and draw them on the image
         """
-        # find circles
+        # Find circles on the given image
         image = image_data.as_1d_image()
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT, self.dp, 100)
-        # adapt dp to reach the right number of circles
+        image_bw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        circles = cv2.HoughCircles(image_bw, cv2.HOUGH_GRADIENT, self.dp,
+                                   self.min_dist)
+        # Adapt circle detector parameter to reach the right number of circles
         if circles is None:
             self.dp *= 1.1
         else:
             self.dp /= len(circles[0])/self.nmb_circ
-        # make a color image again to mark the circles in green
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        # Add circles on the image
         if circles is not None:
             circles = np.round(circles[0, :]).astype("int")
             for (x, y, r) in circles:
-                cv2.circle(image, (x, y), r, (0, 255, 0), 4)
-                cv2.circle(image, (x, int(y-r/3)), 0, (255, 0, 0), 10)
+                cv2.circle(image, (x, y), r, (0, 200, 0), 4)
+                cv2.circle(image, (x, y), 0, (200, 0, 0), 10)
             if len(circles) == 1:
                 self.xy_center.append([circles[0][0],
-                                       int(circles[0][1] - circles[0][2]/3)])
+                                       circles[0][1]])
+        # Add the main circle trajectory on the image
         if len(self.xy_center) > 2:
             for i in range(len(self.xy_center) - 1):
                 cv2.line(image,
                          tuple(self.xy_center[i]),
                          tuple(self.xy_center[i + 1]),
-                         (255, 0, 0), 4)
-        # show the image with Qt
+                         (200, 0, 0), 4)
+        # Return the image to Qt for display
         return QtGui.QImage(image.data,
                             image_data.mem_info.width,
                             image_data.mem_info.height,
