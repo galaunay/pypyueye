@@ -89,13 +89,14 @@ class CircleDetector(object):
 if __name__ == "__main__":
     with Camera(device_id=0, buffer_count=10) as cam:
         #======================================================================
-        # Tune the camera
+        # Camera settings
         #======================================================================
-        cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
+        # TODO: Add more config properties (fps, gain, ...)
+        cam.set_colormode(ueye.IS_CM_BGR8_PACKED)  # TODO: Make this Grayscale
         cam.set_aoi(0, 0, 1280, 1024)
 
         #======================================================================
-        # Display live video
+        # Live video
         #======================================================================
         # we need a QApplication, that runs our QT Gui Framework
         app = PyuEyeQtApp()
@@ -110,14 +111,15 @@ if __name__ == "__main__":
         app.exec_()
 
         #======================================================================
-        # Live detection of circles
+        # Live video with circle detection
         #======================================================================
         # we need a QApplication, that runs our QT Gui Framework
         app = PyuEyeQtApp()
         # a basic qt window
         view = PyuEyeQtView()
         # Create a circle detector and associate it to the view
-        cd = CircleDetector(1, view)
+        cd = CircleDetector(nmb_circ=1)
+        view.user_callback = cd.process
         # Show the view
         view.show()
         # a thread that waits for new images and processes all connected views
