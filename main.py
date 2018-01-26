@@ -87,13 +87,12 @@ class CircleDetector(object):
 
 
 if __name__ == "__main__":
-    with Camera() as cam:
+    with Camera(device_id=0, buffer_count=10) as cam:
         #======================================================================
         # Tune the camera
         #======================================================================
         cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
         cam.set_aoi(0, 0, 1280, 1024)
-        cam.alloc(buffer_count=10)
 
         #======================================================================
         # Display live video

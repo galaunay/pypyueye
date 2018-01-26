@@ -36,8 +36,9 @@ from pyueye_example_utils import (uEyeException, Rect, get_bits_per_pixel,
 
 
 class Camera(object):
-    def __init__(self, device_id=0):
+    def __init__(self, device_id=0, buffer_count=3):
         self.h_cam = ueye.HIDS(device_id)
+        self.buffer_count = buffer_count
         self.img_buffers = []
 
     def __enter__(self):
@@ -53,14 +54,9 @@ class Camera(object):
         """
         return self.h_cam
 
-    def alloc(self, buffer_count=3):
+    def alloc(self):
         """
         Allocate memory for futur images.
-
-        Parameters
-        ==========
-        buffer_count: integer
-            Number of memory buffer to use.
         """
         # Get camera settings
         rect = self.get_aoi()
@@ -68,8 +64,9 @@ class Camera(object):
         # Check that already existing buffers are free
         for buff in self.img_buffers:
             check(ueye.is_FreeImageMem(self.h_cam, buff.mem_ptr, buff.mem_id))
+        self.img_buffers = []
         # Create asked buffers
-        for i in range(buffer_count):
+        for i in range(self.buffer_count):
             buff = ImageBuffer()
             ueye.is_AllocImageMem(self.h_cam,
                                   rect.width, rect.height, bpp,
@@ -147,6 +144,7 @@ class Camera(object):
         wait: boolean
            To wait or not for the camera frames (default to False).
         """
+        self.alloc()
         wait_param = ueye.IS_WAIT if wait else ueye.IS_DONT_WAIT
         return ueye.is_CaptureVideo(self.h_cam, wait_param)
 
