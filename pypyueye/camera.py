@@ -135,6 +135,63 @@ class Camera(object):
         return ueye.is_AOI(self.h_cam, ueye.IS_AOI_IMAGE_SET_AOI, rect_aoi,
                            ueye.sizeof(rect_aoi))
 
+    def set_fps(self, fps):
+        """
+        Set the fps.
+
+        Returns
+        =======
+        fps: number
+            Real fps, can be slightly different than the asked one.
+        """
+        fps = ueye.c_double(fps)
+        new_fps = ueye.c_double()
+        check(ueye.is_SetFrameRate(self.h_cam, fps, new_fps))
+        return new_fps
+
+    def get_fps(self):
+        """
+        Get the current fps.
+
+        Returns
+        =======
+        fps: number
+            Current fps.
+        """
+        fps = ueye.c_double()
+        check(ueye.is_GetFramesPerSecond(self.h_cam, fps))
+        return fps
+
+    def set_exposure(self, exposure):
+        """
+        Set the exposure.
+
+        Returns
+        =======
+        exposure: number
+            Real exposure, can be slightly different than the asked one.
+        """
+        new_exposure = ueye.c_double()
+        check(ueye.is_Exposure(self.h_cam,
+                               ueye.IS_EXPOSURE_CMD_SET_EXPOSURE,
+                               new_exposure, 8))
+        return new_exposure
+
+    def get_exposure(self):
+        """
+        Get the current exposure.
+
+        Returns
+        =======
+        exposure: number
+            Current exposure.
+        """
+        exposure = ueye.c_double()
+        check(ueye.is_Exposure(self.h_cam, ueye.IS_EXPOSURE_CMD_GET_EXPOSURE,
+                               exposure,
+                               8))
+        return exposure
+
     def capture_video(self, wait=False):
         """
         Begin capturing a video.

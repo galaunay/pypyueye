@@ -86,7 +86,7 @@ class PyuEyeQtView(QtGui.QWidget):
         return image_data.as_cv_image()
 
     def handle(self, image_data):
-        self.image = self.user_callback(self, image_data)
+        self.image = self.user_callback(image_data)
         self.update_signal.emit(self.image)
         # unlock the buffer so we can use it again
         image_data.unlock()
