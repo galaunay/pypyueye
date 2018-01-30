@@ -250,30 +250,35 @@ class SaveThread(GatherThread):
 
 
 class RecordThread(GatherThread):
-    def __init__(self, cam, path, nmb_frame=10, copy=True):
+    def __init__(self, cam, path, nmb_frame=10, copy=True, verbose=False):
         """
         Thread used to record videos.
         """
         super().__init__(cam=cam, copy=copy)
         self.nmb_frame = nmb_frame
+        self.verbose = verbose
         self.ind_frame = 0
         self.path = path
         aoi = self.cam.get_aoi()
         # TODO: add real fps
         # Create videowriter instance
-        fourcc = cv2.VideoWriter_fourcc("M", "J", "P", "G")
+        fourcc = cv2.VideoWriter_fourcc("M", "P", "E", "G")
         self.vw = cv2.VideoWriter(self.path,
                                   # cv2.CAP_FFMPEG,
                                   fourcc=fourcc,
-                                  fps=10,
+                                  fps=fps,
                                   frameSize=(aoi.width, aoi.height),
                                   isColor=0)
 
     def process(self, imdata):
-        self.vw.write(imdata)
+        self.vw.write(imdata.as_1d_image()[:, :, 2])
         self.ind_frame += 1
+        if self.verbose:
+            print(f"\r{self.ind_frame}/{self.nmb_frame} frames taken", end="")
         # stop
         if self.ind_frame >= self.nmb_frame:
+            if self.verbose:
+                print("")
             self.stop()
 
     def stop(self):
