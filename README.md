@@ -47,4 +47,7 @@ with Camera(device_id=0, buffer_count=10) as cam:
 
 See [example.py](https://github.com/galaunay/pypyueye/blob/master/example.py) for more examples.
 
+## Documentation
 
+Pypyueye is documented inline.
+The documentation of the [Camera](https://github.com/galaunay/pypyueye/blob/master/pypyueye/camera.py#L35) class is a good start.
