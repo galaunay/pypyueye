@@ -12,7 +12,7 @@ if __name__ == "__main__":
         #======================================================================
         # TODO: Add more config properties (fps, gain, ...)
         cam.set_colormode(ueye.IS_CM_BGR8_PACKED)  # TODO: Make this Grayscale
-        cam.set_aoi(0, 0, 800, 600)
+        cam.set_aoi(0, 0, 800, 400)
         cam.set_fps(4)
         cam.get_fps()
 
@@ -31,24 +31,24 @@ if __name__ == "__main__":
         # # Run and wait for the app to quit
         # app.exec_()
 
-        #======================================================================
-        # Live video with circle detection
-        #======================================================================
-        # we need a QApplication, that runs our QT Gui Framework
-        app = PyuEyeQtApp()
-        # a basic qt window
-        view = PyuEyeQtView()
-        # Create a circle detector and associate it to the view
-        cd = CircleDetector(nmb_circ=1, damp=.1)
-        view.user_callback = cd.process
-        # Show the view
-        view.show()
-        # a thread that waits for new images and processes all connected views
-        thread = FrameThread(cam, view)
-        thread.start()
-        app.exit_connect(thread.stop)
-        # Run and wait for the app to quit
-        app.exec_()
+        # #======================================================================
+        # # Live video with circle detection
+        # #======================================================================
+        # # we need a QApplication, that runs our QT Gui Framework
+        # app = PyuEyeQtApp()
+        # # a basic qt window
+        # view = PyuEyeQtView()
+        # # Create a circle detector and associate it to the view
+        # cd = CircleDetector(nmb_circ=1, damp=.1)
+        # view.user_callback = cd.process
+        # # Show the view
+        # view.show()
+        # # a thread that waits for new images and processes all connected views
+        # thread = FrameThread(cam, view)
+        # thread.start()
+        # app.exit_connect(thread.stop)
+        # # Run and wait for the app to quit
+        # app.exec_()
 
         # #======================================================================
         # # Save an image
