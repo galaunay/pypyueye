@@ -16,20 +16,20 @@ if __name__ == "__main__":
         cam.set_fps(4)
         cam.get_fps()
 
-        # #======================================================================
-        # # Live video
-        # #======================================================================
-        # # we need a QApplication, that runs our QT Gui Framework
-        # app = PyuEyeQtApp()
-        # # a basic qt window
-        # view = PyuEyeQtView()
-        # view.show()
-        # # a thread that waits for new images and processes all connected views
-        # thread = FrameThread(cam, view)
-        # thread.start()
-        # app.exit_connect(thread.stop)
-        # # Run and wait for the app to quit
-        # app.exec_()
+        #======================================================================
+        # Live video
+        #======================================================================
+        # we need a QApplication, that runs our QT Gui Framework
+        app = PyuEyeQtApp()
+        # a basic qt window
+        view = PyuEyeQtView()
+        view.show()
+        # a thread that waits for new images and processes all connected views
+        thread = FrameThread(cam, view)
+        thread.start()
+        app.exit_connect(thread.stop)
+        # Run and wait for the app to quit
+        app.exec_()
 
         # #======================================================================
         # # Live video with circle detection
