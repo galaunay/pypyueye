@@ -89,12 +89,9 @@ class UselessThread(GatherThread):
         self.views = views
 
     def process(self, image_data):
-        print(self.cam.get_exposure())
         import numpy as np
         new_exp = np.random.rand()*20
         self.cam.set_exposure(new_exp)
-        print(f"nex exposure {new_exp}")
-        print(self.cam.get_exposure())
 
 
 class SaveThread(GatherThread):
@@ -137,8 +134,6 @@ class RecordThread(GatherThread):
             print(f"\r{self.ind_frame}/{self.nmb_frame} frames taken", end="")
         # stop
         if self.ind_frame >= self.nmb_frame:
-            if self.verbose:
-                print("")
             self.stop()
 
     def stop(self):
