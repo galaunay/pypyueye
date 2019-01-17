@@ -41,7 +41,7 @@ setup(
     keywords='ueye camera',
     packages=find_packages(exclude=['contrib', 'docs', 'tests', 'samples']),
     # TODO: Add PyQt4 as requirement
-    install_requires=['pyueye', 'opencv-python'],
+    install_requires=['pyueye', 'opencv-python', 'PyQt5'],
     extras_require={},
     # setup_requires=['pytest-runner'],
     # tests_require=['pytest'],

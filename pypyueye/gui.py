@@ -27,8 +27,8 @@ __email__ = "gaby.launay@tutanota.com"
 __status__ = "Development"
 
 
-from PyQt4 import QtCore
-from PyQt4 import QtGui
+from PyQt5 import QtCore
+from PyQt5 import QtWidgets, QtGui
 from pyueye import ueye
 
 
@@ -42,17 +42,17 @@ def get_qt_format(ueye_color_format):
     return color_formats[ueye_color_format]
 
 
-class PyuEyeQtView(QtGui.QWidget):
+class PyuEyeQtView(QtWidgets.QWidget):
 
     update_signal = QtCore.pyqtSignal(QtGui.QImage, name="update_signal")
 
     def __init__(self, parent=None):
         super(self.__class__, self).__init__(parent)
         self.image = None
-        self.graphics_view = QtGui.QGraphicsView(self)
-        self.v_layout = QtGui.QVBoxLayout(self)
-        self.h_layout = QtGui.QHBoxLayout()
-        self.scene = QtGui.QGraphicsScene()
+        self.graphics_view = QtWidgets.QGraphicsView(self)
+        self.v_layout = QtWidgets.QVBoxLayout(self)
+        self.h_layout = QtWidgets.QHBoxLayout()
+        self.scene = QtWidgets.QGraphicsScene()
         self.graphics_view.setScene(self.scene)
         self.v_layout.addWidget(self.graphics_view)
         self.scene.drawBackground = self.draw_background
@@ -96,7 +96,7 @@ class PyuEyeQtView(QtGui.QWidget):
 
 class PyuEyeQtApp:
     def __init__(self, args=[]):
-        self.qt_app = QtGui.QApplication(args)
+        self.qt_app = QtWidgets.QApplication(args)
 
     def exec_(self):
         self.qt_app.exec_()

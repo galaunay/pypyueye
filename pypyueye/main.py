@@ -30,7 +30,7 @@ __status__ = "Development"
 from camera import Camera
 from utils import FrameThread, SaveThread, RecordThread
 from gui import PyuEyeQtApp, PyuEyeQtView
-from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 from pyueye import ueye
 import cv2
 import numpy as np

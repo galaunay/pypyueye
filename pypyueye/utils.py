@@ -29,7 +29,7 @@ __status__ = "Development"
 
 from pyueye import ueye
 from threading import Thread
-from PyQt4 import QtGui
+from PyQt5 import QtWidgets, QtGui
 import cv2
 
 
