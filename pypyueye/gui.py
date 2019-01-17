@@ -82,6 +82,7 @@ class PyuEyeQtView(QtWidgets.QWidget):
         return image_data.as_cv_image()
 
     def handle(self, image_data):
+        raise Exception('Only handle RGB format, not MONO8')
         self.image = self.user_callback(image_data)
         self.update_signal.emit(self.image)
         # unlock the buffer so we can use it again

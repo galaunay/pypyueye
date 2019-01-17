@@ -54,10 +54,14 @@ class GatherThread(Thread):
                                            img_buffer.mem_id)
             if ret == ueye.IS_SUCCESS:
                 imdata = ImageData(self.cam.handle(), img_buffer)
-                self.process(imdata)
+                self._process(imdata)
 
     def process(self, image_data):
         pass
+
+    def _process(self, image_data):
+        self.process(image_data)
+        image_data.unlock()
 
     def stop(self):
         self.cam.stop_video()
@@ -128,7 +132,7 @@ class RecordThread(GatherThread):
                                   isColor=0)
 
     def process(self, imdata):
-        self.vw.write(imdata.as_1d_image()[:, :, 2])
+        self.vw.write(imdata.as_1d_image())
         self.ind_frame += 1
         if self.verbose:
             print(f"\r{self.ind_frame}/{self.nmb_frame} frames taken", end="")

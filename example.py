@@ -11,10 +11,11 @@ if __name__ == "__main__":
         # Camera settings
         #======================================================================
         # TODO: Add more config properties (fps, gain, ...)
-        cam.set_colormode(ueye.IS_CM_BGR8_PACKED)  # TODO: Make this Grayscale
+        cam.set_colormode(ueye.IS_CM_MONO8)
         cam.set_aoi(0, 0, 800, 400)
         cam.set_fps(4)
         cam.get_fps()
+        # cam.set_exposure(1)
 
         #======================================================================
         # Live video
@@ -63,8 +64,8 @@ if __name__ == "__main__":
         # # Save a video
         # #======================================================================
         # # Create a thread to save a video
-        # thread = RecordThread(cam, path="/home/muahah/tmp/ueye_image.avi",
-        #                       nmb_frame=10, verbose=True)
+        # thread = RecordThread(cam, path="ueye_video.avi",
+        #                       nmb_frame=15, verbose=True)
         # thread.start()
         # # Wait for the thread to edn
         # thread.join()
