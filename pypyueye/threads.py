@@ -61,7 +61,7 @@ class GatherThread(Thread):
 
     def _process(self, image_data):
         self.process(image_data)
-        image_data.unlock()
+        #image_data.unlock()
 
     def stop(self):
         self.cam.stop_video()

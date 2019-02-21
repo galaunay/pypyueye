@@ -30,7 +30,7 @@ __status__ = "Development"
 
 import cv2
 import numpy as np
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 
 
 class CircleDetector(object):
@@ -58,24 +58,22 @@ class CircleDetector(object):
         circles = cv2.HoughCircles(image_bw, cv2.HOUGH_GRADIENT, self.dp,
                                    self.min_dist)
         # Adapt circle detector parameter to reach the right number of circles
-        print("")
-        print(self.dp)
         if circles is None:
             fact = (1.0 + self.dp_damp*.1)
             self.dp *= fact
-            print(f"No circles, increasing dp from {self.dp} to {self.dp / fact}")
+            #print(f"No circles, increasing dp from {self.dp} to {self.dp / fact}")
         elif len(circles[0]) < self.nmb_circ[0]:
             fact = len(circles[0])/np.mean(self.nmb_circ)
             fact = 1 + (fact - 1)*self.dp_damp
-            print(f"Increasing dp from {self.dp} to {self.dp / fact}")
+            #print(f"Increasing dp from {self.dp} to {self.dp / fact}")
             self.dp /= fact
         elif len(circles[0]) > self.nmb_circ[1]:
             fact = len(circles[0])/np.mean(self.nmb_circ)
             fact = 1 + (fact - 1)*self.dp_damp
-            print(f"Decreasing dp from {self.dp} to {self.dp / fact}")
+            #print(f"Decreasing dp from {self.dp} to {self.dp / fact}")
             self.dp /= fact
         else:
-            print(f"dp ok at {self.dp}")
+            #print(f"dp ok at {self.dp}")
             pass
         # Add circles on the image
         if circles is not None:
@@ -92,10 +90,8 @@ class CircleDetector(object):
             if ind0 < 0:
                 ind0 = 0
             for i in np.arange(ind0, len(self.xy_center) - 1):
-                cv2.line(image,
-                         tuple(self.xy_center[i]),
-                         tuple(self.xy_center[i + 1]),
-                         (200, 0, 0), 4)
+                cv2.circle(image, tuple(self.xy_center[i]),
+                           2, (200, 0, 0), 4)
         # Return the image to Qt for display
         return QtGui.QImage(image.data,
                             image_data.mem_info.width,

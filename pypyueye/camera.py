@@ -37,6 +37,7 @@ class Camera(object):
         self.h_cam = ueye.HIDS(device_id)
         self.buffer_count = buffer_count
         self.img_buffers = []
+        self.current_fps = None
 
     def __enter__(self):
         self.init()
@@ -141,9 +142,22 @@ class Camera(object):
         fps: number
             Real fps, can be slightly different than the asked one.
         """
+        # checking available fps
+        mini, maxi = self.get_fps_range()
+        if fps < mini:
+            print(f'Warning: Specified fps ({fps:.2f}) not in possible range:'
+                  f' [{mini:.2f}, {maxi:.2f}].'
+                  f' fps has been set to {mini:.2f}.')
+            fps = mini
+        if fps > maxi:
+            print(f'Warning: Specified fps ({fps:.2f}) not in possible range:'
+                  f' [{mini:.2f}, {maxi:.2f}].'
+                  f' fps has been set to {maxi:.2f}.')
+            fps = maxi
         fps = ueye.c_double(fps)
         new_fps = ueye.c_double()
         check(ueye.is_SetFrameRate(self.h_cam, fps, new_fps))
+        self.current_fps = float(new_fps)
         return new_fps
 
     def get_fps(self):
@@ -155,9 +169,28 @@ class Camera(object):
         fps: number
             Current fps.
         """
+        if self.current_fps is not None:
+            return self.current_fps
         fps = ueye.c_double()
         check(ueye.is_GetFramesPerSecond(self.h_cam, fps))
         return fps
+
+    def get_fps_range(self):
+        """
+        Get the current fps available range.
+
+        Returns
+        =======
+        fps_range: 2x1 array
+            range of available fps
+        """
+        mini = ueye.c_double()
+        maxi = ueye.c_double()
+        interv = ueye.c_double()
+        check(ueye.is_GetFrameTimeRange(
+                self.h_cam,
+                mini, maxi, interv))
+        return [float(1/maxi), float(1/mini)]
 
     def set_pixelclock(self, pixelclock):
         """
@@ -169,19 +202,21 @@ class Camera(object):
             Current pixelclock.
         """
         # Warning
-        print('Warning, when changing pixelclock at runtime, you may need to '
+        print('Warning: when changing pixelclock at runtime, you may need to '
               'update the fps and exposure parameters')
         # get pixelclock range
-        pcrange = [ueye.c_uint() for i in range(3)]
+        pcrange = (ueye.c_uint*3)()
         check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_GET_RANGE,
-                                 pcrange, ueye.sizeof(pcrange)))
+                                 pcrange, 12))
         pcmin, pcmax, pcincr = pcrange
         if pixelclock < pcmin:
             pixelclock = pcmin
-            print(f"Pixelclock out of range and set to {pcmin}")
+            print(f"Pixelclock out of range [{pcmin}, {pcmax}] and set "
+                  f"to {pcmin}")
         elif pixelclock > pcmax:
             pixelclock = pcmax
-            print(f"Pixelclock out of range and set to {pcmax}")
+            print(f"Pixelclock out of range [{pcmin}, {pcmax}] and set "
+                  f"to {pcmax}")
         # Set pixelclock
         pixelclock = ueye.c_uint(pixelclock)
         check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_SET,
@@ -262,6 +297,12 @@ class Camera(object):
                                        value,
                                        value_to_return))
 
+    def __get_timeout(self):
+        fps = self.get_fps()
+        if fps == 0:
+            fps = 1
+        return int(1.5*(1/fps)+1)*1000
+
     def capture_video(self, wait=False):
         """
         Begin capturing a video.
@@ -281,7 +322,9 @@ class Camera(object):
         """
         return ueye.is_StopLiveVideo(self.h_cam, ueye.IS_FORCE_VIDEO_STOP)
 
-    def capture_image(self, timeout=1000):
+    def capture_image(self, timeout=None):
+        if timeout is None:
+            timeout = self.__get_timeout()
         self.capture_video()
         img_buffer = ImageBuffer()
         ret = ueye.is_WaitForNextImage(self.handle(),
@@ -297,11 +340,12 @@ class Camera(object):
             data = None
         return data
 
-    def capture_images(self, nmb, timeout=1000):
+    def capture_images(self, nmb, timeout=None):
+        if timeout is None:
+            timeout = self.__get_timeout()
         self.capture_video()
         ims = []
         for i in range(nmb):
-            print(i)
             img_buffer = ImageBuffer()
             ret = ueye.is_WaitForNextImage(self.handle(),
                                            timeout,
@@ -312,7 +356,7 @@ class Camera(object):
                 ims.append(imdata.as_1d_image())
                 imdata.unlock()
             else:
-                print("FAILED !")
+                print(f"Warning: Missed {i}th frame !")
                 ims.append(None)
         self.stop_video()
         return ims
