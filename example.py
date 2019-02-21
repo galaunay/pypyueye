@@ -13,24 +13,30 @@ if __name__ == "__main__":
         # TODO: Add more config properties (fps, gain, ...)
         cam.set_colormode(ueye.IS_CM_MONO8)
         cam.set_aoi(0, 0, 800, 400)
-        cam.set_fps(4)
-        cam.get_fps()
-        # cam.set_exposure(1)
+        cam.set_fps(80)
 
-        #======================================================================
-        # Live video
-        #======================================================================
-        # we need a QApplication, that runs our QT Gui Framework
-        app = PyuEyeQtApp()
-        # a basic qt window
-        view = PyuEyeQtView()
-        view.show()
-        # a thread that waits for new images and processes all connected views
-        thread = FrameThread(cam, view)
-        thread.start()
-        app.exit_connect(thread.stop)
-        # Run and wait for the app to quit
-        app.exec_()
+        #==============================================================================
+        # Capturing images in memory
+        #==============================================================================
+        ims = cam.capture_images(100)
+        fps = cam.get_fps()
+        print(f"Framerate: {fps}")
+
+
+       # #======================================================================
+       # # Live video
+       # #======================================================================
+       # # we need a QApplication, that runs our QT Gui Framework
+       # app = PyuEyeQtApp()
+       # # a basic qt window
+       # view = PyuEyeQtView()
+       # view.show()
+       # # a thread that waits for new images and processes all connected views
+       # thread = FrameThread(cam, view)
+       # thread.start()
+       # app.exit_connect(thread.stop)
+       # # Run and wait for the app to quit
+       # app.exec_()
 
         # #======================================================================
         # # Live video with circle detection
