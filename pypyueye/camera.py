@@ -168,6 +168,21 @@ class Camera(object):
         pixelclock: number
             Current pixelclock.
         """
+        # Warning
+        print('Warning, when changing pixelclock at runtime, you may need to '
+              'update the fps and exposure parameters')
+        # get pixelclock range
+        pcrange = [ueye.c_uint() for i in range(3)]
+        check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_GET_RANGE,
+                                 pcrange, ueye.sizeof(pcrange)))
+        pcmin, pcmax, pcincr = pcrange
+        if pixelclock < pcmin:
+            pixelclock = pcmin
+            print(f"Pixelclock out of range and set to {pcmin}")
+        elif pixelclock > pcmax:
+            pixelclock = pcmax
+            print(f"Pixelclock out of range and set to {pcmax}")
+        # Set pixelclock
         pixelclock = ueye.c_uint(pixelclock)
         check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_SET,
                                  pixelclock, 4))
@@ -182,7 +197,7 @@ class Camera(object):
             Current pixelclock.
         """
         pixelclock = ueye.c_uint()
-        check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_GET_NUMBER,
+        check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_GET,
                                  pixelclock, 4))
         return pixelclock
 
@@ -214,6 +229,38 @@ class Camera(object):
         check(ueye.is_Exposure(self.h_cam, ueye.IS_EXPOSURE_CMD_GET_EXPOSURE,
                                exposure,  8))
         return exposure
+
+    def set_exposure_auto(self, toggle):
+        """
+        Set auto expose to on/off.
+
+        Params
+        =======
+        toggle: integer
+            1 activate the auto gain, 0 deactivate it
+        """
+        value = ueye.c_double(toggle)
+        value_to_return = ueye.c_double()
+        check(ueye.is_SetAutoParameter(self.h_cam,
+                                       ueye.IS_SET_ENABLE_AUTO_SHUTTER,
+                                       value,
+                                       value_to_return))
+
+    def set_gain_auto(self, toggle):
+        """
+        Set/unset auto gain.
+
+        Params
+        ======
+        toggle: integer
+            1 activate the auto gain, 0 deactivate it
+        """
+        value = ueye.c_double(toggle)
+        value_to_return = ueye.c_double()
+        check(ueye.is_SetAutoParameter(self.h_cam,
+                                       ueye.IS_SET_ENABLE_AUTO_GAIN,
+                                       value,
+                                       value_to_return))
 
     def capture_video(self, wait=False):
         """
