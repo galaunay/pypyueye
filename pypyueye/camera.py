@@ -29,7 +29,7 @@ __status__ = "Development"
 
 from pyueye import ueye
 from .utils import (uEyeException, Rect, get_bits_per_pixel,
-                    ImageBuffer, check)
+                    ImageBuffer, check, ImageData)
 
 
 class Camera(object):
@@ -159,6 +159,33 @@ class Camera(object):
         check(ueye.is_GetFramesPerSecond(self.h_cam, fps))
         return fps
 
+    def set_pixelclock(self, pixelclock):
+        """
+        Set the current pixelclock.
+
+        Params
+        =======
+        pixelclock: number
+            Current pixelclock.
+        """
+        pixelclock = ueye.c_uint(pixelclock)
+        check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_SET,
+                                 pixelclock, 4))
+
+    def get_pixelclock(self):
+        """
+        Get the current pixelclock.
+
+        Returns
+        =======
+        pixelclock: number
+            Current pixelclock.
+        """
+        pixelclock = ueye.c_uint()
+        check(ueye.is_PixelClock(self.h_cam, ueye.IS_PIXELCLOCK_CMD_GET_NUMBER,
+                                 pixelclock, 4))
+        return pixelclock
+
     def set_exposure(self, exposure):
         """
         Set the exposure.
@@ -168,7 +195,7 @@ class Camera(object):
         exposure: number
             Real exposure, can be slightly different than the asked one.
         """
-        new_exposure = ueye.c_double()
+        new_exposure = ueye.c_double(exposure)
         check(ueye.is_Exposure(self.h_cam,
                                ueye.IS_EXPOSURE_CMD_SET_EXPOSURE,
                                new_exposure, 8))
@@ -185,8 +212,7 @@ class Camera(object):
         """
         exposure = ueye.c_double()
         check(ueye.is_Exposure(self.h_cam, ueye.IS_EXPOSURE_CMD_GET_EXPOSURE,
-                               exposure,
-                               8))
+                               exposure,  8))
         return exposure
 
     def capture_video(self, wait=False):
@@ -207,6 +233,42 @@ class Camera(object):
         Stop capturing the video.
         """
         return ueye.is_StopLiveVideo(self.h_cam, ueye.IS_FORCE_VIDEO_STOP)
+
+    def capture_image(self, timeout=1000):
+        self.capture_video()
+        img_buffer = ImageBuffer()
+        ret = ueye.is_WaitForNextImage(self.handle(),
+                                       timeout,
+                                       img_buffer.mem_ptr,
+                                       img_buffer.mem_id)
+        if ret == ueye.IS_SUCCESS:
+            imdata = ImageData(self.handle(), img_buffer)
+            data = imdata.as_1d_image()
+            imdata.unlock()
+            self.stop_video()
+        else:
+            data = None
+        return data
+
+    def capture_images(self, nmb, timeout=1000):
+        self.capture_video()
+        ims = []
+        for i in range(nmb):
+            print(i)
+            img_buffer = ImageBuffer()
+            ret = ueye.is_WaitForNextImage(self.handle(),
+                                           timeout,
+                                           img_buffer.mem_ptr,
+                                           img_buffer.mem_id)
+            if ret == ueye.IS_SUCCESS:
+                imdata = ImageData(self.handle(), img_buffer)
+                ims.append(imdata.as_1d_image())
+                imdata.unlock()
+            else:
+                print("FAILED !")
+                ims.append(None)
+        self.stop_video()
+        return ims
 
     def freeze_video(self, wait=False):
         """
