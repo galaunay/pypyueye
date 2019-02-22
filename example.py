@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
-    with Camera(device_id=0, buffer_count=100) as cam:
+    with Camera(device_id=0, buffer_count=3000) as cam:
         #======================================================================
         # Camera settings
         #======================================================================
@@ -95,13 +95,19 @@ if __name__ == "__main__":
         # # Wait for the thread to end
         # thread.join()
 
+
         # #======================================================================
         # # Save a video
         # #======================================================================
+        # nmb_frames = 3000
+        # filepath= "video1.avi"
+        # wait = input("PRESS ENTER TO BEGIN RECORDING.")
         # cam.set_colormode(ueye.IS_CM_MONO8)
         # # Create a thread to save a video
-        # thread = RecordThread(cam, path="ueye_video.avi",
-        #                       nmb_frame=100, verbose=True)
+        # thread = RecordThread(cam, path=filepath,
+        #                       use_memory=True,
+        #                       nmb_frame=nmb_frames,
+        #                       verbose=True)
         # thread.start()
         # # Wait for the thread to edn
         # thread.join()

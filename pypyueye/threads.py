@@ -112,34 +112,50 @@ class SaveThread(GatherThread):
 
 
 class RecordThread(GatherThread):
-    def __init__(self, cam, path, nmb_frame=10, copy=True, verbose=False):
+    def __init__(self, cam, path, use_memory=False, nmb_frame=10, copy=True,
+                 verbose=False):
         """
         Thread used to record videos.
         """
         super().__init__(cam=cam, copy=copy)
         self.nmb_frame = nmb_frame
+        self.use_memory = use_memory
         self.verbose = verbose
         self.ind_frame = 0
         self.path = path
-        aoi = self.cam.get_aoi()
-        # TODO: add real fps
-        # Create videowriter instance
-        fourcc = cv2.VideoWriter_fourcc("M", "P", "E", "G")
-        self.vw = cv2.VideoWriter(self.path,
-                                  fourcc=fourcc,
-                                  fps=24,
-                                  frameSize=(aoi.width, aoi.height),
-                                  isColor=0)
+        # Create videowriter instance if needed
+        if not self.use_memory:
+            self.vw = self.open_video_writer()
+        self.in_memory_images = []
 
+    def open_video_writer(self):
+        aoi = self.cam.get_aoi()
+        fourcc = cv2.VideoWriter_fourcc("M", "P", "E", "G")
+        return cv2.VideoWriter(self.path,
+                               fourcc=fourcc,
+                               fps=24,
+                               frameSize=(aoi.width, aoi.height),
+                               isColor=0)
     def process(self, imdata):
-        self.vw.write(imdata.as_1d_image())
+        if self.use_memory:
+            self.in_memory_images.append(imdata.as_1d_image())
+        else:
+            self.vw.write(imdata.as_1d_image())
         self.ind_frame += 1
         if self.verbose:
             print(f"\r{self.ind_frame}/{self.nmb_frame} frames taken", end="")
         # stop
         if self.ind_frame >= self.nmb_frame:
+            print('\n')
             self.stop()
 
     def stop(self):
+        if self.use_memory:
+            print("Saving images to drive...")
+            self.vw = self.open_video_writer()
+            for i, im in enumerate(self.in_memory_images):
+                print(f"\r{i}/{self.nmb_frame} frames saved", end="")
+                self.vw.write(im)
+            print("\nDone")
         self.vw.release()
         super().stop()
